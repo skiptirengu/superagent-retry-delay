@@ -36,11 +36,7 @@ function shouldRetry (err, res, allowedStatuses) {
   if (res && res.status) {
     const status = res.status
 
-    if (status >= 500) {
-      return true
-    }
-
-    if ((status >= 400 || status < 200) && allowedStatuses.indexOf(status) === -1) {
+    if ((status >= 400 || status < 200) && allowedStatuses.indexOf(status) !== -1) {
       return true
     }
   }

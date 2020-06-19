@@ -83,7 +83,7 @@ describe('superagent-retry-delay', function () {
     it('should not retry on handled errors', function (done) {
       agent
         .get('http://localhost:' + port)
-        .retry(5, 13, [404])
+        .retry(5, 13, [401, 409])
         .end(function (err, res) {
           res.status.should.eql(404)
           requests.should.eql(3)
@@ -94,7 +94,7 @@ describe('superagent-retry-delay', function () {
     it('should not retry on handled errors - multiple delays format', function (done) {
       agent
         .get('http://localhost:' + port)
-        .retry(5, [13, 13, 13, 13, 13], [404])
+        .retry(5, [13, 13, 13, 13, 13], [401, 409])
         .end(function (err, res) {
           res.status.should.eql(404)
           requests.should.eql(3)
@@ -131,6 +131,7 @@ describe('superagent-retry-delay', function () {
     it('should retry on errors', function (done) {
       agent
         .get('http://localhost:' + port)
+        .retry(1, 17, [])
         .end(function (err, res) {
           res.status.should.eql(503)
 
@@ -140,7 +141,7 @@ describe('superagent-retry-delay', function () {
 
       agent
         .get('http://localhost:' + port)
-        .retry(5, 17)
+        .retry(5, 17, [503])
         .end(function (err, res) {
           res.text.should.eql('hello!')
           done(err)
@@ -150,6 +151,7 @@ describe('superagent-retry-delay', function () {
     it('should retry on errors - multiple delays format', function (done) {
       agent
         .get('http://localhost:' + port)
+        .retry(1, 17, [503])
         .end(function (err, res) {
           res.status.should.eql(503)
 
@@ -159,207 +161,9 @@ describe('superagent-retry-delay', function () {
 
       agent
         .get('http://localhost:' + port)
-        .retry(5, [17, 17, 17, 17, 17])
+        .retry(5, [17, 17, 17, 17, 17], [503])
         .end(function (err, res) {
           res.text.should.eql('hello!')
-          done(err)
-        })
-    })
-
-    after(function (done) { server.close(done) })
-  })
-
-  describe('500 errors', function () {
-    let requests = 0
-    const port = 10410
-    const app = express()
-    let server
-
-    before(function (done) {
-      app.get('/', function (req, res, next) {
-        requests++
-        if (requests > 4) {
-          res.send('hello!')
-        } else {
-          res.sendStatus(500)
-        }
-      })
-
-      server = app.listen(port, done)
-    })
-
-    afterEach(function () {
-      requests = 0
-    })
-
-    it('should retry on errors', function (done) {
-      agent
-        .get('http://localhost:' + port)
-        .end(function (err, res) {
-          res.status.should.eql(500)
-
-          // appease eslint, do nothing with error to allow it to bubble up
-          if (err) { }
-        })
-
-      agent
-        .get('http://localhost:' + port)
-        .retry(5, 13)
-        .end(function (err, res) {
-          res.text.should.eql('hello!')
-          requests.should.eql(5)
-          done(err)
-        })
-    })
-
-    it('should retry on errors - multiple delays format', function (done) {
-      agent
-        .get('http://localhost:' + port)
-        .end(function (err, res) {
-          res.status.should.eql(500)
-
-          // appease eslint, do nothing with error to allow it to bubble up
-          if (err) { }
-        })
-
-      agent
-        .get('http://localhost:' + port)
-        .retry(5, [13, 13, 13, 13, 13])
-        .end(function (err, res) {
-          res.text.should.eql('hello!')
-          requests.should.eql(5)
-          done(err)
-        })
-    })
-
-    after(function (done) { server.close(done) })
-  })
-
-  describe('404 errors', function () {
-    let requests = 0
-    const port = 10410
-    const app = express()
-    let server
-
-    before(function (done) {
-      app.get('/', function (req, res, next) {
-        requests++
-        if (requests > 4) {
-          res.send('hello!')
-        } else {
-          res.sendStatus(404)
-        }
-      })
-
-      server = app.listen(port, done)
-    })
-
-    afterEach(function () {
-      requests = 0
-    })
-
-    it('should retry on errors', function (done) {
-      agent
-        .get('http://localhost:' + port)
-        .end(function (err, res) {
-          res.status.should.eql(404)
-
-          // appease eslint, do nothing with error to allow it to bubble up
-          if (err) { }
-        })
-
-      agent
-        .get('http://localhost:' + port)
-        .retry(5, 13)
-        .end(function (err, res) {
-          res.text.should.eql('hello!')
-          requests.should.eql(5)
-          done(err)
-        })
-    })
-
-    it('should retry on errors - multiple delays format', function (done) {
-      agent
-        .get('http://localhost:' + port)
-        .end(function (err, res) {
-          res.status.should.eql(404)
-
-          // appease eslint, do nothing with error to allow it to bubble up
-          if (err) { }
-        })
-
-      agent
-        .get('http://localhost:' + port)
-        .retry(5, [13, 13, 13, 13, 13])
-        .end(function (err, res) {
-          res.text.should.eql('hello!')
-          requests.should.eql(5)
-          done(err)
-        })
-    })
-
-    after(function (done) { server.close(done) })
-  })
-
-  describe('401 errors', function () {
-    let requests = 0
-    const port = 10410
-    const app = express()
-    let server
-
-    before(function (done) {
-      app.get('/', function (req, res, next) {
-        requests++
-        if (requests > 4) {
-          res.send('hello!')
-        } else {
-          res.sendStatus(401)
-        }
-      })
-
-      server = app.listen(port, done)
-    })
-
-    afterEach(function () {
-      requests = 0
-    })
-
-    it('should retry on errors', function (done) {
-      agent
-        .get('http://localhost:' + port)
-        .end(function (err, res) {
-          res.status.should.eql(401)
-
-          // appease eslint, do nothing with error to allow it to bubble up
-          if (err) { }
-        })
-
-      agent
-        .get('http://localhost:' + port)
-        .retry(5, 13)
-        .end(function (err, res) {
-          res.text.should.eql('hello!')
-          requests.should.eql(5)
-          done(err)
-        })
-    })
-
-    it('should retry on errors - multiple delays format', function (done) {
-      agent
-        .get('http://localhost:' + port)
-        .end(function (err, res) {
-          res.status.should.eql(401)
-
-          // appease eslint, do nothing with error to allow it to bubble up
-          if (err) { }
-        })
-
-      agent
-        .get('http://localhost:' + port)
-        .retry(5, [13, 13, 13, 13, 13])
-        .end(function (err, res) {
-          res.text.should.eql('hello!')
-          requests.should.eql(5)
           done(err)
         })
     })
@@ -408,7 +212,7 @@ describe('superagent-retry-delay', function () {
 
       agent
         .get('http://localhost:' + port)
-        .retry(5, delays)
+        .retry(5, delays, [401])
         .end(function (err, res) {
           res.text.should.eql('hello!')
           requests.should.eql(6)
@@ -439,7 +243,7 @@ describe('superagent-retry-delay', function () {
 
       agent
         .get('http://localhost:' + port)
-        .retry(5, delays)
+        .retry(5, delays, [401])
         .end(function (err, res) {
           res.text.should.eql('hello!')
           requests.should.eql(6)

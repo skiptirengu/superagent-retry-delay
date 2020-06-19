@@ -17,17 +17,17 @@ require('superagent-retry-delay')(superagent);
 
 superagent
   .get('https://segment.io')
-  .retry(2, 5000, [401, 404]) // retry twice before responding, wait 5 seconds between failures, do not retry when response is success, or 401 or 404
+  .retry(2, 5000, [401, 404]) // retry twice before responding, wait 5 seconds between failures, DO NOT retry when response is success. RETRY when response is or 401 or 404
   .end(onresponse);
 
 superagent
   .get('https://segment.io')
-  .retry(3, [1000, 3000, 10000], [401, 404]) // retry three times before responding, first wait 1 second, then 3 seconds, and finally 10 seconds between failures, do not retry when response is success, or 401 or 404
+  .retry(3, [1000, 3000, 10000], [401, 404]) // retry three times before responding, first wait 1 second, then 3 seconds, and finally 10 seconds between failures, DO NOT retry when response is success. RETRY when response is 401 or 404
   .end(onresponse);
 
 superagent
   .get('https://segment.io')
-  .retry(5, [1000, 3000], [401, 404]) // retry five times before responding, first wait 1 second, and then wait 3 seconds between all other failures, do not retry when response is success, or 401 or 404
+  .retry(5, [1000, 3000], [502, 503]) // retry five times before responding, first wait 1 second, and then wait 3 seconds between all other failures, DO NOT retry when response is success. RETRY when response is 502 or 503
   .end(onresponse);
 
 function onresponse (err, res) {
@@ -51,7 +51,7 @@ const supertest = require('supertest');
 
 ## Retrying Cases
 
-  Currently the retrying logic checks for any error, but it will allow a list of status codes to avoid retrying - this is handy if you're testing say 404's.
+  Currently the retrying logic ONLY checks for errors in the provided list of status codes.
 
 
 ## License
